@@ -1,54 +1,62 @@
-name: NPM Publish — @vnkr/* packages
+name: Publish on Version Tag
 
 on:
   push:
     tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Dry run (no actual upload)"
-        type: boolean
-        default: false
+      - "v*.*.*"
 
 jobs:
   publish:
-    name: Publish @vnkr/* to npmjs.com
+    name: Publish packages
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # Required for NPM provenance attestation
+      packages: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Setup Node.js with npm registry auth
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          node-version: 22
           cache: pnpm
+          registry-url: https://registry.npmjs.org/
 
-      - name: Install dependencies
+      - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
+      - name: Build
+        run: pnpm --filter "@vnkrvietnam/*" build
 
-      - name: Publish packages (dry run)
-        if: ${{ inputs.dry_run == true }}
-        run: pnpm --filter @vnkr/deploy-npm publish:dry
+      # ── Public packages → npmjs.com ─────────────────────────────────────────
+      - name: Publish public packages to npm
+        run: |
+          pnpm publish -r \
+            --filter "@vnkrvietnam/types" \
+            --filter "@vnkrvietnam/config" \
+            --filter "@vnkrvietnam/core-sdk" \
+            --filter "@vnkrvietnam/contracts" \
+            --filter "@vnkrvietnam/ui-kit" \
+            --filter "@vnkrvietnam/merchant-sdk" \
+            --filter "@vnkrvietnam/db" \
+            --access public \
+            --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish packages (live)
-        if: ${{ inputs.dry_run != true }}
-        run: pnpm --filter @vnkr/deploy-npm publish:all
+      # ── Restricted packages → GitHub Packages ───────────────────────────────
+      - name: Publish restricted packages to GitHub Packages
+        run: |
+          pnpm publish -r \
+            --filter "@vnkrvietnam/sdk-swift" \
+            --filter "@vnkrvietnam/sdk-internal" \
+            --filter "@vnkrvietnam/swift-adapter" \
+            --filter "@vnkrvietnam/swift-sdk-internal" \
+            --registry https://npm.pkg.github.com \
+            --no-git-checks
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

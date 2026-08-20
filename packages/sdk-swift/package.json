@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/sdk-swift",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SWIFT Alliance Gateway SDK for @vnkrvietnam international financial system",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

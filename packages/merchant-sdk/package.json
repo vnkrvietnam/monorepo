@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/merchant-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JS/TS SDK for merchant partners integrating VNKR payment gateway (dev-api.vnkr.vn)",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -22,7 +22,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",

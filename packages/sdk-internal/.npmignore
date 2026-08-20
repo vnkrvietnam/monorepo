@@ -1,0 +1,15 @@
+# sdk-internal — chỉ publish dist/, bảo vệ source + vendor
+src/
+tests/
+vendor/
+*.jar
+*.spec.ts
+*.test.ts
+tsconfig*.json
+.eslintrc*
+vitest.config*
+.env*
+*.pem
+*.key
+node_modules/
+*.log

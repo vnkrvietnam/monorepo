@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/swift-sdk-internal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SWIFT vendor SDK internal mirror — do not import directly; use @vnkrvietnam/swift-adapter",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

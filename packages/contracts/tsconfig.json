@@ -18,6 +18,6 @@
       "@vnkrvietnam/config": ["../config/src/index.ts"]
     }
   },
-  "include": ["src/**/*", "scripts/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "scripts", "deploy", "test", "contracts"]
 }

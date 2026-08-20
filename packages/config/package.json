@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/config",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Environment constants, Program IDs, Seed PDAs, RPC Endpoints for VNKR ecosystem",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -22,7 +22,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",

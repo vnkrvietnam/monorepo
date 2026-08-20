@@ -1,0 +1,34 @@
+# ─── Vendor SDKs (JARs + binary, Git LFS) — KHÔNG publish ────────────────────
+vendor/
+*.jar
+*.so
+*.dll
+*.class
+*.zip
+
+# ─── Source TypeScript — chỉ publish dist/ ────────────────────────────────────
+src/
+tests/
+*.spec.ts
+*.test.ts
+
+# ─── Dev configs ─────────────────────────────────────────────────────────────
+tsconfig.json
+tsconfig*.json
+.eslintrc*
+.prettierrc*
+vitest.config*
+jest.config*
+
+# ─── Secrets & local configs ──────────────────────────────────────────────────
+.env*
+*.pem
+*.p12
+*.pfx
+*.key
+*.crt
+
+# ─── Misc ─────────────────────────────────────────────────────────────────────
+node_modules/
+*.log
+.DS_Store

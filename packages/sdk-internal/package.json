@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/sdk-internal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Centralized internal SDK — SWIFT message types, builders, security, event bus, config & utilities for @vnkrvietnam ecosystem",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

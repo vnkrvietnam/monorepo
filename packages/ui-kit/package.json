@@ -1,6 +1,6 @@
 {
   "name": "@vnkrvietnam/ui-kit",
-  "version": "1.1.0",
+  "version": "1.0.1",
   "description": "VNKR exclusive design system component library",
   "author": "VNKR Organization",
   "license": "UNLICENSED",
@@ -24,7 +24,7 @@
   ],
   "publishConfig": {
     "access": "public",
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly --declaration --outDir dist",
