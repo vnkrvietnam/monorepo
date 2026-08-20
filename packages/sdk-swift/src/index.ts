@@ -21,6 +21,9 @@ export type { LauHeader } from './security/lau-header.signer';
 export { PkiCertificateService } from './security/pki-certificate.service';
 export type { CertificateBundle } from './security/pki-certificate.service';
 
+export { SwiftOAuthClient } from './security/oauth';
+export type { OAuthTokenResponse, OAuthClientConfig } from './security/oauth';
+
 // ─── ISO 20022 Generators ─────────────────────────────────────────────────────
 export type {
   Pacs008Message,

@@ -29,6 +29,9 @@ import { referralRouter }   from "./routes/referral.route.js";
 import { webhookRouter }    from "./routes/webhooks.route.js";
 import { complianceRouter } from "./routes/compliance.route.js";
 import { rpcRouter }        from "./routes/rpc.route.js";
+import { walletRouter }     from "./routes/wallet.route.js";
+import { p2pRouter }        from "./routes/p2p.route.js";
+import { swiftRouter }      from "./routes/swift.route.js";
 
 // ── Admin route modules ───────────────────────────────────────────────────────
 import { authAdminRouter }        from "./routes/admin/auth.admin.route.js";
@@ -106,6 +109,9 @@ app.use(`${V1}/learn`,      learnRouter);
 app.use(`${V1}/referral`,   referralRouter);
 app.use(`${V1}/webhooks`,   webhookRouter);
 app.use(`${V1}/compliance`, complianceRouter);
+app.use(`${V1}/wallet`,     walletRouter);
+app.use(`${V1}/p2p`,        p2pRouter);
+app.use(`${V1}/swift`,      swiftRouter);
 
 // ── JSON-RPC 2.0 endpoint (blockchain node proxy) ─────────────────────────────
 app.use(`${V1}/rpc`,  rpcLimiter, rpcRouter);
