@@ -1,0 +1,56 @@
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ─── Build outputs ────────────────────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# ─── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# ─── Test / Coverage ──────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ─── IDE / OS ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+
+# ─── Anchor / Solana ──────────────────────────────────────────────────────────
+target/
+.anchor/
+
+# ─── Vendor compiled artifacts ────────────────────────────────────────────────
+packages/swift-adapter/vendor/**/*.class
+packages/swift/vendor/**/*.class
+
+# ─── SWIFT Vendor SDKs (large binaries — không push lên GitHub) ───────────────
+# Các file JAR và vendor bundle được cài qua scripts/install-vendor.sh
+packages/swift-adapter/vendor/
+packages/swift/vendor/
+# Giữ lại chỉ config schema và install script (không phải JARs)
+!packages/swift-adapter/vendor/.gitkeep
+!packages/swift/vendor/.gitkeep
+
+# ─── Service vendor JARs (quá lớn cho GitHub) ────────────────────────────────
+services/swift-gateway/vendor/
+services/mock-mgw/vendor/
+TODO/*.zip
+TODO/*.jar
+TODO
+
+.env.production
+!.env.example

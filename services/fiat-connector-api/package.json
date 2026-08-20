@@ -1,0 +1,26 @@
+{
+  "name": "@vnkrvietnam/fiat-connector-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "[dev-api.vnkr.vn] Fiat Bank Matching Service & Webhook — VNKR FinTech Services JSC",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "fastify": "^4.28.0",
+    "axios": "^1.7.0",
+    "nodemailer": "^6.9.0",
+    "@vnkrvietnam/db": "workspace:*",
+    "@vnkrvietnam/types": "workspace:*",
+    "@vnkrvietnam/config": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.0",
+    "ts-node": "^10.9.2"
+  }
+}

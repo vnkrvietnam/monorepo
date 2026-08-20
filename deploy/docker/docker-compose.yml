@@ -1,0 +1,330 @@
+version: "3.9"
+
+x-common-build: &common-build
+  context: ../..
+  args:
+    NODE_ENV: production
+
+services:
+  # ── VNKR Infra — PostgreSQL 16 ───────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: vnkr-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB:       vnkr
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vnkr_dev_password_2026}
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../../deploy/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ../../deploy/db/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ../../deploy/db/03_views.sql:/docker-entrypoint-initdb.d/03_views.sql:ro
+      - ../../deploy/db/04_roles.sql:/docker-entrypoint-initdb.d/04_roles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vnkr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ── VNKR Infra — PgBouncer (connection pooler) ────────────────────────────
+  pgbouncer:
+    image: bitnami/pgbouncer:latest
+    container_name: vnkr-pgbouncer
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRESQL_HOST:           postgres
+      POSTGRESQL_PORT:           5432
+      POSTGRESQL_DATABASE:       vnkr
+      POSTGRESQL_USERNAME:       postgres
+      POSTGRESQL_PASSWORD:       ${POSTGRES_PASSWORD:-vnkr_dev_password_2026}
+      PGBOUNCER_DATABASE:        vnkr
+      PGBOUNCER_POOL_MODE:       transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 200
+      PGBOUNCER_DEFAULT_POOL_SIZE: 20
+      PGBOUNCER_LOG_CONNECTIONS: 0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── VNKR Infra — Redis Event Bus ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vnkr-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── VNKR FinTech — Fiat Connector API [dev-api.vnkr.vn] ──────────────────
+  fiat-connector-api:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.fiat-connector-api
+    image: vnkr/fiat-connector-api:${TAG:-latest}
+    container_name: vnkr-fiat-connector-api
+    ports:
+      - "4001:4001"
+    environment:
+      NODE_ENV: production
+      BANK_WEBHOOK_SECRET: ${BANK_WEBHOOK_SECRET}
+      DEFAULT_API_ENDPOINT: ${DEFAULT_API_ENDPOINT:-https://dev-api.vnkr.vn}
+      TRON_FULL_HOST: ${TRON_FULL_HOST:-https://api.trongrid.io}
+      TRON_PRIVATE_KEY: ${TRON_PRIVATE_KEY}
+      REDIS_URL: redis://vnkr-redis:6379
+      DATABASE_URL: postgresql://vnkr_fiat_connector:${DB_PASS_FIAT:-CHANGE_ME_fiat_connector_2026}@pgbouncer:5432/vnkr
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── VNKR MENA — OTC Liquidity Engine [otc.vnkr.vn] ───────────────────────
+  otc-liquidity-engine:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.otc-liquidity-engine
+    image: vnkr/otc-liquidity-engine:${TAG:-latest}
+    container_name: vnkr-otc-liquidity-engine
+    ports:
+      - "4002:4002"
+    environment:
+      NODE_ENV: production
+      SOLANA_RPC_MAINNET: ${SOLANA_RPC_MAINNET:-https://api.mainnet-beta.solana.com}
+      APPCHAIN_RPC: ${APPCHAIN_RPC:-https://rpc.vnkr.vn}
+      REDIS_URL: redis://vnkr-redis:6379
+      DATABASE_URL: postgresql://vnkr_otc:${DB_PASS_OTC:-CHANGE_ME_otc_2026}@pgbouncer:5432/vnkr
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── VNKR Infra — Subgraph Indexer [treasury-subgraph-api.vnkr.vn] ─────────
+  indexer-subgraph:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.indexer-subgraph
+    image: vnkr/indexer-subgraph:${TAG:-latest}
+    container_name: vnkr-indexer-subgraph
+    ports:
+      - "4003:4003"
+    environment:
+      NODE_ENV: production
+      APPCHAIN_RPC: ${APPCHAIN_RPC:-https://rpc.vnkr.vn}
+      APPCHAIN_CHAIN_ID: ${APPCHAIN_CHAIN_ID:-1}
+      DATABASE_URL: postgresql://vnkr_indexer:${DB_PASS_INDEXER:-CHANGE_ME_indexer_2026}@pgbouncer:5432/vnkr
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── VNKR Infra — Stalwart Mail Server [mail.vnkr.vn] ─────────────────────
+  mail-server:
+    image: stalwartlabs/mail-server:latest
+    container_name: vnkr-mail-server
+    restart: unless-stopped
+    ports:
+      - "25:25"       # SMTP
+      - "465:465"     # SMTPS
+      - "587:587"     # SMTP Submission
+      - "993:993"     # IMAP SSL
+      - "8080:8080"   # Admin Console / JMAP API
+    volumes:
+      - stalwart-data:/opt/stalwart-mail/data
+      - stalwart-etc:/opt/stalwart-mail/etc
+    environment:
+      STALWART_HOSTNAME: ${STALWART_HOSTNAME:-mail.vnkr.vn}
+    env_file:
+      - ../../.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── VNKR MENA — SWIFT Messaging Gateway [otc.vnkr.vn] ────────────────────
+  # Node.js Fastify proxy (Port 4004) bridging the monorepo to the SWIFT
+  # Microgateway 2.0.17 JVM daemon (swift-mgw, Port 9003).
+  swift-gateway:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.swift-gateway
+    image: vnkr/swift-gateway:${TAG:-latest}
+    container_name: vnkr-swift-gateway
+    ports:
+      - "4004:4004"
+    environment:
+      NODE_ENV: production
+      PORT: 4004
+      SWIFT_LAU_KEY: ${SWIFT_LAU_KEY}
+      SWIFT_BIC_CODE: ${SWIFT_BIC_CODE:-VNKRVNVN}
+      # URL of the SWIFT Microgateway JVM daemon (same host network or sidecar)
+      SWIFT_MGW_URL: ${SWIFT_MGW_URL:-http://swift-mgw-daemon:9003}
+      SWIFT_MGW_APIKEY: ${SWIFT_MGW_APIKEY}
+      # Redis Event Bus — VNKR ↔ SWIFT bridge
+      REDIS_URL: redis://vnkr-redis:6379
+      # URL fiat-connector-api để forward credit notifications
+      FIAT_CONNECTOR_URL: http://vnkr-fiat-connector-api:4001
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4004/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - otc-liquidity-engine
+      - redis
+
+  # ── VNKR MENA — SWIFT Microgateway JVM Daemon [otc.vnkr.vn] ──────────────
+  # Spring Boot JAR (swift-mgw-2.0.17-1.jar) — requires JDK 11+, a valid
+  # config-swift-mgw.enc and PKI keystore at runtime.
+  # Mount the extracted vendor directory as a volume.
+  swift-mgw-daemon:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: vnkr-swift-mgw-daemon
+    working_dir: /opt/swift-mgw
+    volumes:
+      - ../../services/swift-gateway/vendor/swift-mgw-2.0.17-1:/opt/swift-mgw:ro
+      - swift-mgw-db:/opt/swift-mgw/db
+      - swift-mgw-log:/opt/swift-mgw/log
+    ports:
+      - "9003:9003"
+    entrypoint:
+      - java
+      - -cp
+      - /opt/swift-mgw/lib/swift-mgw-2.0.17-1.jar
+      - -Dloader.path=BOOT-INF/lib,/opt/swift-mgw/lib/internal/swift-security-sdk-2.0.11.jar
+      - -Dhttps.protocols=TLSv1.2
+      - -Djdk.tls.client.protocols=TLSv1.2
+      - org.springframework.boot.loader.PropertiesLauncher
+      - /opt/swift-mgw
+      - /opt/swift-mgw/config/config-swift-mgw.enc
+      - /opt/swift-mgw/config/config-swift-mgw-secret.ks
+      - /opt/swift-mgw/oas/
+      - /opt/swift-mgw/oas/local-api-repository/
+      - /opt/swift-mgw/bin/mgw.pid
+      - --logging.file.name=/opt/swift-mgw/log/mgw.log
+    environment:
+      NODE_ENV: production
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9003/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── VNKR MENA — SWIFT Chain Bridge Relayer [otc.vnkr.vn] ────────────────
+  # Bi-Directional Oracle Relayer (Port 4005):
+  #   INBOUND:  swift-gateway webhook → settleInboundSwift() → Mint AXVN
+  #   OUTBOUND: SwiftOutboundRequested EVM event → swift-gateway /send-mt103
+  swift-chain-bridge:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.swift-chain-bridge
+    image: vnkr/swift-chain-bridge:${TAG:-latest}
+    container_name: vnkr-swift-chain-bridge
+    ports:
+      - "4005:4005"
+    environment:
+      NODE_ENV: production
+      PORT: 4005
+      # VNKR App-Chain EVM RPC (Hyperledger Besu)
+      VNKR_EVM_RPC: ${VNKR_EVM_RPC:-http://besu-node:8545}
+      # VNKRSwiftBridge.sol contract address on App-Chain
+      BRIDGE_CONTRACT_ADDRESS: ${BRIDGE_CONTRACT_ADDRESS}
+      # Relayer wallet private key (phải có role oracleRelayer trong contract)
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY}
+      # swift-gateway URL (nội bộ Docker network)
+      SWIFT_GATEWAY_URL: http://vnkr-swift-gateway:4004
+      SWIFT_API_KEY: ${SWIFT_API_KEY}
+      SWIFT_BIC_CODE: ${SWIFT_BIC_CODE:-VNKRVNVNXXX}
+      # Webhook secret cho xác thực nội bộ giữa swift-gateway và bridge
+      VNKR_INTERNAL_WEBHOOK_SECRET: ${VNKR_INTERNAL_WEBHOOK_SECRET}
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4005/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - swift-gateway
+      - redis
+
+  # ── VNKR R&D — Dune Alert Bots (Telegram / Discord) ───────────────────────
+  dune-alert-bots:
+    build:
+      <<: *common-build
+      dockerfile: deploy/docker/Dockerfile.dune-alert-bots
+    image: vnkr/dune-alert-bots:${TAG:-latest}
+    container_name: vnkr-dune-alert-bots
+    environment:
+      NODE_ENV: production
+      DUNE_API_KEY: ${DUNE_API_KEY}
+      DUNE_RESERVE_QUERY_ID: ${DUNE_RESERVE_QUERY_ID:-1234567}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_ALERT_CHAT_ID: ${TELEGRAM_ALERT_CHAT_ID}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+    env_file:
+      - ../../.env
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  stalwart-data:
+  stalwart-etc:
+  swift-mgw-db:
+  swift-mgw-log:
+  redis-data:
+
+networks:
+  default:
+    name: vnkr-network

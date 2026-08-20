@@ -1,0 +1,7 @@
+# ─── Helm Chart: vnkr-services ────────────────────────────────────────────────
+apiVersion: v2
+name: vnkr-services
+description: Kubernetes Helm chart for VNKR TECH HOLDING microservices
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

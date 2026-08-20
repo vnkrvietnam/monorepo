@@ -1,0 +1,233 @@
+/var/www/apps
+├── app-web
+│   ├── src
+│   │   └── app
+│   │       ├── (app)
+│   │       │   ├── auto-debit
+│   │       │   │   └── page.tsx
+│   │       │   ├── card
+│   │       │   │   └── page.tsx
+│   │       │   ├── cashback
+│   │       │   │   └── page.tsx
+│   │       │   ├── crypto
+│   │       │   │   └── page.tsx
+│   │       │   ├── crypto-deposit
+│   │       │   │   └── page.tsx
+│   │       │   ├── ekyc
+│   │       │   │   └── page.tsx
+│   │       │   ├── home
+│   │       │   │   └── page.tsx
+│   │       │   ├── learn
+│   │       │   │   └── page.tsx
+│   │       │   ├── more
+│   │       │   │   └── page.tsx
+│   │       │   ├── onramp
+│   │       │   │   └── page.tsx
+│   │       │   ├── p2p
+│   │       │   │   └── page.tsx
+│   │       │   ├── qr-scan
+│   │       │   │   └── page.tsx
+│   │       │   ├── receipt
+│   │       │   │   └── page.tsx
+│   │       │   ├── referral
+│   │       │   │   └── page.tsx
+│   │       │   ├── reset-pin
+│   │       │   │   └── page.tsx
+│   │       │   ├── security
+│   │       │   │   └── page.tsx
+│   │       │   ├── support
+│   │       │   │   └── page.tsx
+│   │       │   ├── swift
+│   │       │   │   └── page.tsx
+│   │       │   ├── transfer
+│   │       │   │   └── page.tsx
+│   │       │   ├── uetr
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── (auth)
+│   │       │   ├── confirm-pin
+│   │       │   │   └── page.tsx
+│   │       │   ├── enter-pin
+│   │       │   │   └── page.tsx
+│   │       │   ├── forgot-password
+│   │       │   │   └── page.tsx
+│   │       │   ├── login
+│   │       │   │   └── page.tsx
+│   │       │   ├── onboarding
+│   │       │   │   └── page.tsx
+│   │       │   ├── otp
+│   │       │   │   └── page.tsx
+│   │       │   ├── register
+│   │       │   │   └── page.tsx
+│   │       │   ├── set-pin
+│   │       │   │   └── page.tsx
+│   │       │   ├── splash
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── admin
+│   │       │   ├── cms
+│   │       │   │   └── page.tsx
+│   │       │   ├── compliance
+│   │       │   │   └── page.tsx
+│   │       │   ├── dashboard
+│   │       │   │   └── page.tsx
+│   │       │   ├── finance
+│   │       │   │   └── page.tsx
+│   │       │   ├── kyc
+│   │       │   │   └── page.tsx
+│   │       │   ├── users
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── tsconfig.tsbuildinfo
+├── dao-portal
+│   ├── src
+│   │   └── app
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── digital-twin-engine
+│   ├── src
+│   │   └── index.ts
+│   ├── package.json
+│   └── tsconfig.json
+├── explorer-vnkrscan
+│   ├── src
+│   │   └── app
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── holding-admin-portal
+│   ├── src
+│   │   └── app
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── id-fiat-gateway
+│   ├── src
+│   │   └── app
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── kyc-portal
+│   ├── src
+│   │   └── app
+│   │       ├── (portal)
+│   │       │   ├── attestations
+│   │       │   │   └── page.tsx
+│   │       │   ├── audit-log
+│   │       │   │   └── page.tsx
+│   │       │   ├── dashboard
+│   │       │   │   └── page.tsx
+│   │       │   ├── queue
+│   │       │   │   └── page.tsx
+│   │       │   ├── rejected
+│   │       │   │   └── page.tsx
+│   │       │   ├── settings
+│   │       │   │   └── page.tsx
+│   │       │   ├── users
+│   │       │   │   └── page.tsx
+│   │       │   ├── verified
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── merchant-portal
+│   ├── src
+│   │   └── app
+│   │       ├── (portal)
+│   │       │   ├── api-keys
+│   │       │   │   └── page.tsx
+│   │       │   ├── dashboard
+│   │       │   │   └── page.tsx
+│   │       │   ├── orders
+│   │       │   │   └── page.tsx
+│   │       │   ├── payments
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── pay-portal
+│   ├── src
+│   │   └── app
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+├── sandbox-dashboard
+│   ├── src
+│   │   └── app
+│   │       ├── (dashboard)
+│   │       │   ├── alerts
+│   │       │   │   └── page.tsx
+│   │       │   ├── circuit-breaker
+│   │       │   │   └── page.tsx
+│   │       │   ├── overview
+│   │       │   │   └── page.tsx
+│   │       │   ├── tiers
+│   │       │   │   └── page.tsx
+│   │       │   └── layout.tsx
+│   │       ├── globals.css
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── Dockerfile
+│   ├── next-env.d.ts
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── tsconfig.json
+└── swap-dex
+    ├── src
+    │   └── app
+    │       ├── globals.css
+    │       ├── layout.tsx
+    │       └── page.tsx
+    ├── Dockerfile
+    ├── next-env.d.ts
+    ├── next.config.mjs
+    ├── package.json
+    └── tsconfig.json
+
+90 directories, 141 files

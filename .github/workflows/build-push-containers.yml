@@ -1,0 +1,96 @@
+name: Build & Push Docker Images to GHCR
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ── Next.js Apps ──────────────────────────────────────────────────
+          - app_name: id-fiat-gateway
+            dockerfile: ./apps/id-fiat-gateway/Dockerfile
+            context: .
+          - app_name: pay-portal
+            dockerfile: ./apps/pay-portal/Dockerfile
+            context: .
+          - app_name: explorer-vnkrscan
+            dockerfile: ./apps/explorer-vnkrscan/Dockerfile
+            context: .
+          - app_name: swap-dex
+            dockerfile: ./apps/swap-dex/Dockerfile
+            context: .
+          - app_name: dao-portal
+            dockerfile: ./apps/dao-portal/Dockerfile
+            context: .
+          - app_name: holding-admin-portal
+            dockerfile: ./apps/holding-admin-portal/Dockerfile
+            context: .
+          # ── Microservices ─────────────────────────────────────────────────
+          - app_name: fiat-connector-api
+            dockerfile: ./services/fiat-connector-api/Dockerfile
+            context: .
+          - app_name: otc-liquidity-engine
+            dockerfile: ./services/otc-liquidity-engine/Dockerfile
+            context: .
+          - app_name: indexer-subgraph
+            dockerfile: ./services/indexer-subgraph/Dockerfile
+            context: .
+          - app_name: dune-alert-bots
+            dockerfile: ./services/dune-alert-bots/Dockerfile
+            context: .
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.app_name }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_NAME=${{ matrix.app_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

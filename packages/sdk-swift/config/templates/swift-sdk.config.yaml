@@ -1,0 +1,51 @@
+# SWIFT Alliance Gateway — SDK Configuration Template
+# Copy this file and populate with your institution's credentials.
+# Never commit secrets (keys, passwords) to version control.
+
+# ─────────────────────────────────────────────
+# Gateway Connection
+# ─────────────────────────────────────────────
+
+# SWIFT Alliance Gateway or Alliance Lite2 HTTPS endpoint.
+# Example: https://swift-gateway.yourinstitution.com/swift/api/v1
+gateway_url: "https://sandbox.swiftnet.sipn.swift.com/swift/api/v1"
+
+# Your institution's BIC code (8 or 11 alphanumeric characters).
+# Example: VNKRVNVX  or  VNKRVNVXXXX
+institution_bic: "VNKRVNVX"
+
+# BIC of the Service Bureau providing connectivity on your behalf (optional).
+# Leave empty if your institution connects directly to SWIFT.
+service_bureau_bic: ""
+
+# ─────────────────────────────────────────────
+# PKI / TLS Certificates
+# ─────────────────────────────────────────────
+
+# Absolute or workspace-relative path to your SWIFT PKI certificate (PEM format).
+cert_path: "./certs/swift-client.crt"
+
+# Absolute or workspace-relative path to the private key matching the above certificate.
+key_path: "./certs/swift-client.key"
+
+# ─────────────────────────────────────────────
+# Local Authentication (LAU)
+# ─────────────────────────────────────────────
+
+# HMAC-SHA256 secret shared key for LAU header signing.
+# Must be at least 32 characters. Rotate regularly.
+# Recommended: load from environment variable SWIFT_LAU_KEY.
+lau_key: "${SWIFT_LAU_KEY}"
+
+# ─────────────────────────────────────────────
+# Environment & Reliability
+# ─────────────────────────────────────────────
+
+# Target environment. Allowed values: sandbox | production
+environment: "sandbox"
+
+# HTTP request timeout in milliseconds.
+timeout_ms: 30000
+
+# Number of automatic retry attempts on transient failures (5xx, network errors).
+retry_attempts: 3

@@ -1,0 +1,197 @@
+# ─── Default values for vnkr-services helm chart ─────────────────────────────
+
+replicaCount: 2
+
+image:
+  registry: registry.vnkr.vn
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets:
+  - name: vnkr-registry-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ─── Services ─────────────────────────────────────────────────────────────────
+
+services:
+  fiatConnectorApi:
+    enabled: true
+    name: fiat-connector-api
+    image: vnkr/fiat-connector-api
+    port: 4001
+    replicas: 2
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    env:
+      NODE_ENV: production
+    secretRefs:
+      - BANK_WEBHOOK_SECRET
+      - TRON_PRIVATE_KEY
+    healthPath: /health
+
+  otcLiquidityEngine:
+    enabled: true
+    name: otc-liquidity-engine
+    image: vnkr/otc-liquidity-engine
+    port: 4002
+    replicas: 2
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    env:
+      NODE_ENV: production
+      SOLANA_RPC_MAINNET: https://api.mainnet-beta.solana.com
+    healthPath: /health
+
+  indexerSubgraph:
+    enabled: true
+    name: indexer-subgraph
+    image: vnkr/indexer-subgraph
+    port: 4003
+    replicas: 1
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    env:
+      NODE_ENV: production
+      APPCHAIN_CHAIN_ID: "1"
+    secretRefs:
+      - APPCHAIN_RPC
+    healthPath: /health
+
+  duneAlertBots:
+    enabled: true
+    name: dune-alert-bots
+    image: vnkr/dune-alert-bots
+    port: null          # no HTTP port — worker only
+    replicas: 1
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    env:
+      NODE_ENV: production
+      DUNE_RESERVE_QUERY_ID: "1234567"
+    secretRefs:
+      - DUNE_API_KEY
+      - TELEGRAM_BOT_TOKEN
+      - TELEGRAM_ALERT_CHAT_ID
+      - DISCORD_BOT_TOKEN
+
+  swiftGateway:
+    enabled: true
+    name: swift-gateway
+    image: vnkr/swift-gateway
+    port: 4004
+    replicas: 2
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    env:
+      NODE_ENV: production
+      PORT: "4004"
+      SWIFT_BIC_CODE: VNKRVNVN
+    secretRefs:
+      - SWIFT_LAU_KEY
+      - SWIFT_MGW_APIKEY
+      - SWIFT_MGW_URL
+      - REDIS_URL
+      - FIAT_CONNECTOR_URL
+    healthPath: /health
+
+  swiftChainBridge:
+    enabled: true
+    name: swift-chain-bridge
+    image: vnkr/swift-chain-bridge
+    port: 4005
+    replicas: 2
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    env:
+      NODE_ENV: production
+      PORT: "4005"
+      SWIFT_BIC_CODE: VNKRVNVNXXX
+    secretRefs:
+      - RELAYER_PRIVATE_KEY
+      - BRIDGE_CONTRACT_ADDRESS
+      - VNKR_EVM_RPC
+      - SWIFT_GATEWAY_URL
+      - SWIFT_API_KEY
+      - VNKR_INTERNAL_WEBHOOK_SECRET
+    healthPath: /health
+
+# ─── Ingress ──────────────────────────────────────────────────────────────────
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  tls:
+    - secretName: vnkr-tls
+      hosts:
+        - dev-api.vnkr.vn
+        - otc.vnkr.vn
+        - treasury-subgraph-api.vnkr.vn
+        - swift-gateway.vnkr.vn
+  hosts:
+    - host: dev-api.vnkr.vn
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: fiat-connector-api
+          servicePort: 4001
+    - host: otc.vnkr.vn
+      paths:
+        - path: /api/v1/swift
+          pathType: Prefix
+          serviceName: swift-gateway
+          servicePort: 4004
+        - path: /api/v1/bridge
+          pathType: Prefix
+          serviceName: swift-chain-bridge
+          servicePort: 4005
+        - path: /
+          pathType: Prefix
+          serviceName: otc-liquidity-engine
+          servicePort: 4002
+    - host: swift-gateway.vnkr.vn
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: swift-gateway
+          servicePort: 4004
+    - host: treasury-subgraph-api.vnkr.vn
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: indexer-subgraph
+          servicePort: 4003

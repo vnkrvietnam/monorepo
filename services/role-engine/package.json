@@ -1,0 +1,18 @@
+{
+  "name": "@vnkrvietnam/role-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Global Leadership Automation Engine — Event-driven Worker tự động kích hoạt 10 vai trò lãnh đạo theo ma trận Finance & Blockchain",
+  "main": "role-engine.js",
+  "type": "commonjs",
+  "scripts": {
+    "start":     "node role-engine.js",
+    "dev":       "node --watch role-engine.js",
+    "pm2:start": "pm2 start ../../ecosystem.config.cjs --only role-engine",
+    "pm2:stop":  "pm2 stop role-engine",
+    "pm2:logs":  "pm2 logs role-engine"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

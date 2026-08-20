@@ -1,0 +1,143 @@
+version: "3.9"
+
+# ─── Docker Compose for local development ────────────────────────────────────
+# Overrides deploy/docker/docker-compose.yml with hot-reload, dev ports, etc.
+#
+# Usage:
+#   docker-compose -f deploy/docker/docker-compose.yml \
+#                  -f deploy/docker/docker-compose.dev.yml \
+#                  up -d
+#
+# Or use the monorepo convenience script:
+#   pnpm dev:docker
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── PostgreSQL — development overrides (increased logging, etc.)
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: vnkr_dev_password_2026
+    command:
+      - postgres
+      - -c
+      - log_statement=all
+      - -c
+      - log_duration=on
+
+  # ── PgBouncer — dev mode (verbose logging)
+  pgbouncer:
+    environment:
+      PGBOUNCER_LOG_CONNECTIONS: 1
+      PGBOUNCER_LOG_DISCONNECTIONS: 1
+      PGBOUNCER_LOG_POOLER_ERRORS: 1
+
+  # ── fiat-connector-api — local dev mode
+  fiat-connector-api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.fiat-connector-api
+      target: dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://vnkr_fiat_connector:CHANGE_ME_fiat_connector_2026@pgbouncer:5432/vnkr
+    volumes:
+      - ../../services/fiat-connector-api/src:/app/services/fiat-connector-api/src:ro
+      - ../../packages:/app/packages:ro
+    command: pnpm --filter @vnkr/fiat-connector-api dev
+
+  # ── otc-liquidity-engine — local dev mode
+  otc-liquidity-engine:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.otc-liquidity-engine
+      target: dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://vnkr_otc:CHANGE_ME_otc_2026@pgbouncer:5432/vnkr
+    volumes:
+      - ../../services/otc-liquidity-engine/src:/app/services/otc-liquidity-engine/src:ro
+      - ../../packages:/app/packages:ro
+    command: pnpm --filter @vnkr/otc-liquidity-engine dev
+
+  # ── indexer-subgraph — local dev mode
+  indexer-subgraph:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.indexer-subgraph
+      target: dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://vnkr_indexer:CHANGE_ME_indexer_2026@pgbouncer:5432/vnkr
+    volumes:
+      - ../../services/indexer-subgraph/src:/app/services/indexer-subgraph/src:ro
+      - ../../packages:/app/packages:ro
+    command: pnpm --filter @vnkr/indexer-subgraph dev
+
+  # ── swift-gateway — local dev mode
+  swift-gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.swift-gateway
+      target: dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../../services/swift-gateway/src:/app/services/swift-gateway/src:ro
+      - ../../packages:/app/packages:ro
+    command: pnpm --filter @vnkr/swift-gateway dev
+
+  # ── swift-chain-bridge — local dev mode
+  swift-chain-bridge:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.swift-chain-bridge
+      target: dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../../services/swift-chain-bridge/src:/app/services/swift-chain-bridge/src:ro
+      - ../../packages:/app/packages:ro
+    command: pnpm --filter @vnkr/swift-chain-bridge dev
+
+  # ── Redis — unchanged from production, already suitable for dev
+  redis:
+
+  # ── Mail — unchanged
+  mail-server:
+
+  # ── SWIFT MGW JVM Daemon — disabled in dev; replaced by swift-mgw-mock
+  swift-mgw-daemon:
+    profiles:
+      - prod-only   # skip this service in dev mode
+
+  # ── Mock SWIFT MGW Daemon — dev replacement for swift-mgw-daemon
+  # Runs the Node.js mock (services/mock-mgw) on port 9003.
+  # Set SWIFT_MGW_URL=http://swift-mgw-mock:9003 in swift-gateway env.
+  swift-mgw-mock:
+    build:
+      context: ../..
+      dockerfile: services/mock-mgw/Dockerfile
+    image: vnkr/mock-mgw-daemon:dev
+    container_name: vnkr-swift-mgw-mock
+    ports:
+      - "9003:9003"
+    environment:
+      NODE_ENV: development
+      SWIFT_MGW_APIKEY: ${SWIFT_MGW_APIKEY:-dev-mgw-apikey}
+      MOCK_MGW_PORT: 9003
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── swift-gateway — point to mock MGW in dev
+  swift-gateway:
+    environment:
+      SWIFT_MGW_URL: http://swift-mgw-mock:9003
+    depends_on:
+      - swift-mgw-mock
+
+  # ── Dune Alert Bots — unchanged
+  dune-alert-bots:

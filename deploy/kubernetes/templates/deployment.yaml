@@ -1,0 +1,81 @@
+{{/*
+───────────────────────────────────────────────────────────────────────────────
+  VNKR Services — Generic Deployment template
+  Iterates over .Values.services map and creates a Deployment per service.
+───────────────────────────────────────────────────────────────────────────────
+*/}}
+{{- range $key, $svc := .Values.services }}
+{{- if $svc.enabled }}
+{{- $fullImage := printf "%s/%s:%s" $.Values.image.registry $svc.image $.Values.image.tag }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "vnkr-services.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svc.name }}
+spec:
+  replicas: {{ $svc.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $svc.name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $svc.name }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        app.kubernetes.io/component: {{ $svc.name }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $svc.name }}
+          image: {{ $fullImage }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          {{- if $svc.port }}
+          ports:
+            - containerPort: {{ $svc.port }}
+              protocol: TCP
+          {{- end }}
+          env:
+            {{- range $envKey, $envVal := $svc.env }}
+            - name: {{ $envKey }}
+              value: {{ $envVal | quote }}
+            {{- end }}
+            {{- range $secretKey := $svc.secretRefs }}
+            - name: {{ $secretKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: vnkr-secrets
+                  key: {{ $secretKey }}
+                  optional: true
+            {{- end }}
+          {{- if $svc.port }}
+          {{- with $svc.healthPath }}
+          livenessProbe:
+            httpGet:
+              path: {{ . }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ . }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}
+{{- end }}
+{{- end }}

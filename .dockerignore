@@ -1,0 +1,53 @@
+# ─── .dockerignore — loại trừ files không cần thiết cho Docker build ──────────
+
+# Version control
+.git
+.gitignore
+
+# Node
+node_modules
+**/node_modules
+
+# Build outputs (sẽ được tạo trong container)
+dist
+**/dist
+.next
+**/.next
+target
+**/target
+build
+**/build
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Rust / Anchor
+test-ledger
+**/.anchor
+
+# IDE & OS
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test artifacts
+coverage
+**/__tests__/fixtures
+
+# Terraform state
+deploy/terraform/.terraform
+deploy/terraform/*.tfstate
+deploy/terraform/*.tfvars
+
+# Docker (don't nest Docker builds)
+deploy/docker
+
+# CI/CD
+.github

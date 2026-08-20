@@ -1,0 +1,21 @@
+{
+  "name": "@vnkrvietnam/mock-mgw-daemon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mock SWIFT Microgateway Daemon cho môi trường dev/staging — thay thế swift-mgw-daemon khi chưa có PKI keystore SWIFT thật",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "fastify": "^4.28.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0"
+  }
+}

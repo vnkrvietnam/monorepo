@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VNKR Fintech – 42-Screen Interactive Prototype</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:#0f172a;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;padding:20px 10px;gap:24px}
+  #sidebar{width:220px;flex-shrink:0;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto}
+  #sidebar::-webkit-scrollbar{width:4px}
+  #sidebar::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+  .sidebar-title{color:#94a3b8;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px}
+  .nav-btn{display:block;width:100%;text-align:left;padding:6px 10px;border-radius:8px;border:none;background:transparent;color:#64748b;font-size:11px;cursor:pointer;transition:all 0.15s;line-height:1.4}
+  .nav-btn:hover{background:#1e293b;color:#e2e8f0}
+  .nav-btn.active{background:#a8e063;color:#0f172a;font-weight:700}
+  .nav-group{margin-bottom:6px}
+  #phone-wrap{flex-shrink:0}
+  .phone{width:375px;height:812px;background:#fff;border-radius:50px;overflow:hidden;position:relative;box-shadow:0 40px 120px rgba(0,0,0,0.7);border:10px solid #1e293b;outline:2px solid #334155}
+  .phone-inner{width:100%;height:100%;position:relative;overflow:hidden;background:#fff}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;animation:fadeIn 0.2s ease}
+  .screen.active{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .status-bar{height:44px;display:flex;justify-content:space-between;align-items:flex-end;padding:0 24px 8px;flex-shrink:0;position:relative;z-index:10}
+  .status-time{font-size:15px;font-weight:700}
+  .status-icons{display:flex;align-items:center;gap:5px;font-size:11px}
+  .back-btn{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;font-size:16px;flex-shrink:0}
+  .back-btn:active{background:rgba(0,0,0,0.12)}
+  .screen-header{display:flex;align-items:center;padding:4px 20px 12px;gap:12px;flex-shrink:0}
+  .btn{width:100%;padding:16px;border-radius:30px;border:none;font-size:16px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
+  .btn:active{opacity:0.85;transform:scale(0.98)}
+  .btn-black{background:#111;color:#fff}
+  .btn-green{background:#a8e063;color:#111}
+  .btn-outline{background:transparent;color:#111;border:1.5px solid #ddd}
+  .btn-disabled{background:#e0e0e0;color:#aaa;cursor:not-allowed}
+  .bottom-tab{height:72px;background:#fff;border-top:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-around;flex-shrink:0;padding-bottom:8px}
+  .tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 8px;border-radius:12px;flex:1}
+  .tab-icon{font-size:20px;line-height:1}
+  .tab-label{font-size:10px;color:#aaa;font-weight:500}
+  .tab-item.active .tab-label{color:#111;font-weight:700}
+  .tab-item.active .tab-icon{transform:scale(1.1)}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+  .scroll::-webkit-scrollbar{display:none}
+  .input-group{display:flex;flex-direction:column;gap:4px}
+  .input-label{font-size:12px;color:#888;font-weight:500}
+  .input-field{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid #e8e8e8;font-size:15px;outline:none;background:#f7f7f7;font-family:inherit}
+  .input-field:focus{border-color:#a8e063;background:#fff}
+  .input-field.error{border-color:#ff4444;background:#fff5f5}
+  .error-text{font-size:12px;color:#ff4444;margin-top:4px}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 24px 6px;background:#f8f8f8}
+  .key{height:58px;border-radius:50%;border:none;font-size:22px;font-weight:400;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:background 0.1s,transform 0.1s;gap:1px}
+  .key:active{background:#e0e0e0;transform:scale(0.92)}
+  .key-sub{font-size:8px;color:#999;font-weight:600;letter-spacing:0.5px}
+  .key-del{background:transparent;box-shadow:none;font-size:20px}
+  .pin-dots{display:flex;gap:16px;justify-content:center;margin:20px 0}
+  .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;transition:all 0.2s}
+  .pin-dot.filled{background:#111;border-color:#111}
+  .pin-dot.error{background:#ff4444;border-color:#ff4444;animation:shake 0.4s}
+  .otp-boxes{display:flex;gap:10px;justify-content:center;margin:20px 0}
+  .otp-box{width:62px;height:62px;border-radius:16px;border:2px solid #e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;transition:all 0.2s}
+  .otp-box.filled{border-color:#a8e063;background:#f9fff0}
+  .card-visual{width:290px;height:175px;border-radius:22px;background:linear-gradient(135deg,#a8e063,#d4f090);position:relative;overflow:hidden;cursor:pointer;margin:0 auto}
+  .card-blob1{position:absolute;width:140px;height:140px;background:#111;border-radius:50%;top:-30px;right:-20px}
+  .card-blob2{position:absolute;width:95px;height:95px;background:#ff9eb5;border-radius:50%;bottom:5px;right:55px}
+  .card-content{position:relative;z-index:2;padding:18px 20px;height:100%;display:flex;flex-direction:column;justify-content:space-between}
+  .card-brand{font-size:14px;font-weight:800;letter-spacing:2px;color:#111}
+  .card-number{font-size:14px;font-weight:600;letter-spacing:2px;color:#111}
+  .card-footer{display:flex;gap:20px;font-size:12px;color:#333}
+  .list-item{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer}
+  .list-item:active{background:#f5f5f5}
+  .list-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+  .list-title{font-size:15px;font-weight:500;color:#111}
+  .list-sub{font-size:12px;color:#888;margin-top:1px}
+  .divider{height:1px;background:#f0f0f0;margin:0 20px}
+  .toggle{width:50px;height:28px;border-radius:14px;background:#e0e0e0;position:relative;cursor:pointer;flex-shrink:0;border:none}
+  .toggle.on{background:#4cd964}
+  .toggle::after{content:'';position:absolute;width:22px;height:22px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+  .toggle.on::after{transform:translateX(22px)}
+  .quick-actions{display:flex;justify-content:space-around;padding:12px 8px 4px}
+  .action-btn{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:none;background:transparent}
+  .action-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.15s}
+  .action-btn:active .action-circle{transform:scale(0.88)}
+  .action-label{font-size:11px;color:#333;font-weight:500}
+  .section-title{font-size:12px;font-weight:700;color:#aaa;padding:10px 20px 4px;letter-spacing:0.8px;text-transform:uppercase}
+  .amount-display{font-size:52px;font-weight:700;color:#111;text-align:center;line-height:1.1}
+  .amount-cents{font-size:28px;font-weight:500;color:#888}
+  .preset-row{display:flex;gap:10px;padding:10px 20px;justify-content:center}
+  .preset-btn{padding:8px 18px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:600;cursor:pointer}
+  .preset-btn:active{background:#111;color:#fff;border-color:#111}
+  .service-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 20px}
+  .service-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;border:none;background:transparent}
+  .service-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.15s}
+  .service-item:active .service-icon{transform:scale(0.88)}
+  .service-label{font-size:10px;color:#333;font-weight:500;text-align:center}
+  .crypto-row{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;border:none;background:transparent;width:100%}
+  .crypto-row:active{background:#f9f9f9}
+  .crypto-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .cat-tabs{display:flex;gap:8px;padding:0 20px 12px;overflow-x:auto}
+  .cat-tabs::-webkit-scrollbar{display:none}
+  .cat-tab{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;border:1.5px solid #ddd;background:#fff;color:#555}
+  .cat-tab.active{background:#111;color:#fff;border-color:#111}
+  .lang-item{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;border-bottom:1px solid #f5f5f5;border:none;background:transparent;width:100%}
+  .lang-flag{font-size:26px}
+  .lang-name{font-size:16px;font-weight:500;flex:1;text-align:left}
+  .lang-radio{width:22px;height:22px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .lang-radio.selected{border-color:#3b82f6;background:#3b82f6}
+  .lang-radio.selected::after{content:'';display:block;width:8px;height:8px;background:#fff;border-radius:50%}
+  .appear-pills{display:flex;gap:10px;padding:16px 20px}
+  .appear-pill{flex:1;padding:12px;border-radius:12px;border:2px solid #e0e0e0;text-align:center;cursor:pointer;font-size:13px;font-weight:600;background:#fff}
+  .appear-pill.active{border-color:#111;background:#f0f0f0}
+  .faq-item{padding:16px 20px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+  .faq-q{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:15px;font-weight:500;color:#111;line-height:1.4}
+  .faq-a{font-size:13px;color:#666;line-height:1.6;margin-top:10px;display:none}
+  .faq-item.open .faq-a{display:block}
+  .faq-plus{font-size:22px;color:#ccc;flex-shrink:0;transition:transform 0.2s}
+  .faq-item.open .faq-plus{transform:rotate(45deg)}
+  .notif-item{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;border:none;background:transparent;width:100%}
+  .notif-item:active{background:#f9f9f9}
+  .notif-logo{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .success-circle{width:96px;height:96px;border-radius:50%;background:#111;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:42px;animation:bounce 1s ease infinite}
+  .tx-row{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;border:none;background:transparent;width:100%}
+  .tx-row:active{background:#f5f5f5}
+  .tx-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .cashback-row{display:flex;align-items:center;gap:12px;padding:13px 20px}
+  .cashback-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:flex;align-items:flex-end}
+  .bottom-sheet{width:100%;background:#fff;border-radius:24px 24px 0 0;padding-bottom:24px;animation:slideUp 0.3s ease}
+  .sheet-handle{width:36px;height:4px;border-radius:2px;background:#ddd;margin:12px auto 16px}
+  .sheet-title{font-size:18px;font-weight:700;text-align:center;padding:0 20px 16px}
+  .ob-dots{display:flex;gap:8px;justify-content:center;margin:16px 0}
+  .ob-dot{width:8px;height:8px;border-radius:50%;background:#ddd;transition:all 0.2s}
+  .ob-dot.active{background:#111;width:24px}
+  .home-balance{text-align:center;padding:16px 20px 8px}
+  .balance-label{font-size:13px;color:#888;margin-bottom:4px}
+  .balance-amount{font-size:42px;font-weight:700;color:#111}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600}
+  .badge-green{background:#e8fbe8;color:#22a822}
+  .badge-red{background:#ffe8e8;color:#e53e3e}
+  .badge-yellow{background:#fff8e1;color:#f59e0b}
+  .contact-row{display:flex;gap:12px;padding:8px 20px;overflow-x:auto}
+  .contact-row::-webkit-scrollbar{display:none}
+  .contact-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0}
+  .contact-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .contact-name{font-size:10px;color:#333;font-weight:500;white-space:nowrap}
+  .swap-box{background:#f7f7f7;border-radius:20px;padding:16px 18px;margin:0 20px}
+  .swap-label{font-size:11px;color:#888;font-weight:600;margin-bottom:8px}
+  .swap-amount{font-size:28px;font-weight:700;color:#111}
+  .swap-currency{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e0e0e0;border-radius:20px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer}
+  .uetr-step{display:flex;gap:12px;padding:10px 0}
+  .uetr-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}
+  .uetr-line{width:2px;background:#e0e0e0;flex-shrink:0;margin:0 5px}
+  /* Screen-specific bg colors */
+  .bg-purple{background:#c5b3f5}
+  .bg-yellow{background:#f5e842}
+  .bg-teal{background:#00d2c6}
+  .bg-blue{background:#42a5f5}
+  .bg-brown{background:#c0734a}
+  .bg-pink{background:#f48fb1}
+  .bg-green{background:#a8e063}
+  .bg-white{background:#fff}
+  .bg-dark{background:#111}
+  /* Info label */
+  .screen-label{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(0,0,0,0.25);white-space:nowrap;z-index:100;pointer-events:none}
+  /* Nav counter */
+  #screen-counter{color:#475569;font-size:11px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="screen-counter">Screen 1 / 42</div>
+  <div class="nav-group">
+    <div class="sidebar-title">Auth & Onboarding</div>
+    <button class="nav-btn active" onclick="goTo('splash1')">1. Splash Screen v1</button>
+    <button class="nav-btn" onclick="goTo('splash2')">2. Splash Screen v2</button>
+    <button class="nav-btn" onclick="goTo('lang-select')">3. App Language (select)</button>
+    <button class="nav-btn" onclick="goTo('onboarding1')">4. Onboarding v1</button>
+    <button class="nav-btn" onclick="goTo('onboarding2')">5. Onboarding v2</button>
+    <button class="nav-btn" onclick="goTo('registration-default')">6. Registration (default)</button>
+    <button class="nav-btn" onclick="goTo('registration-filled')">7. Registration (filled)</button>
+    <button class="nav-btn" onclick="goTo('otp-default')">8. Confirm OTP (default)</button>
+    <button class="nav-btn" onclick="goTo('otp-filled')">9. Confirm OTP (filled)</button>
+    <button class="nav-btn" onclick="goTo('set-pin-default')">10. Set PIN (default)</button>
+    <button class="nav-btn" onclick="goTo('set-pin-typing')">11. Setting PIN code</button>
+    <button class="nav-btn" onclick="goTo('enter-pin')">12. Enter PIN</button>
+    <button class="nav-btn" onclick="goTo('pin-wrong')">13. PIN is wrong</button>
+  </div>
+  <div class="nav-group">
+    <div class="sidebar-title">Home & Wallet</div>
+    <button class="nav-btn" onclick="goTo('home-v1')">14. Home v1</button>
+    <button class="nav-btn" onclick="goTo('home-v2')">15. Home v2</button>
+    <button class="nav-btn" onclick="goTo('home-services')">16. Home Services</button>
+    <button class="nav-btn" onclick="goTo('wallet-details')">17. Wallet Details</button>
+    <button class="nav-btn" onclick="goTo('card-front')">18. Card (front)</button>
+    <button class="nav-btn" onclick="goTo('card-flipped')">19. Card (flipped)</button>
+    <button class="nav-btn" onclick="goTo('card-scroll')">20. Card Scroll</button>
+  </div>
+  <div class="nav-group">
+    <div class="sidebar-title">Transfer & SWIFT</div>
+    <button class="nav-btn" onclick="goTo('add-balance-default')">21. Add Balance (default)</button>
+    <button class="nav-btn" onclick="goTo('add-balance-filled')">22. Add Balance (filled)</button>
+    <button class="nav-btn" onclick="goTo('adding-amount')">23. Adding Amount</button>
+    <button class="nav-btn" onclick="goTo('transfer')">24. Transfer</button>
+    <button class="nav-btn" onclick="goTo('transfer-to')">25. Transfer To</button>
+    <button class="nav-btn" onclick="goTo('transfer-filled')">26. Transfer (filled amt)</button>
+    <button class="nav-btn" onclick="goTo('success')">27. Success</button>
+  </div>
+  <div class="nav-group">
+    <div class="sidebar-title">Crypto Hub</div>
+    <button class="nav-btn" onclick="goTo('crypto-start')">28. Crypto Start Trade</button>
+    <button class="nav-btn" onclick="goTo('crypto')">29. Crypto Dashboard</button>
+    <button class="nav-btn" onclick="goTo('swap')">30. Swap</button>
+  </div>
+  <div class="nav-group">
+    <div class="sidebar-title">Payments</div>
+    <button class="nav-btn" onclick="goTo('payments')">31. Payments</button>
+    <button class="nav-btn" onclick="goTo('search-bill')">32. Search Bill ID</button>
+    <button class="nav-btn" onclick="goTo('pay-service')">33. Pay Service Debt</button>
+    <button class="nav-btn" onclick="goTo('cashback')">34. Cashback</button>
+  </div>
+  <div class="nav-group">
+    <div class="sidebar-title">Profile & Settings</div>
+    <button class="nav-btn" onclick="goTo('profile')">35. Profile</button>
+    <button class="nav-btn" onclick="goTo('edit-profile')">36. Edit Profile</button>
+    <button class="nav-btn" onclick="goTo('settings')">37. Settings</button>
+    <button class="nav-btn" onclick="goTo('app-language')">38. App Language</button>
+    <button class="nav-btn" onclick="goTo('appearance')">39. Appearance</button>
+    <button class="nav-btn" onclick="goTo('notifications')">40. Notifications</button>
+    <button class="nav-btn" onclick="goTo('notif-detail')">41. Notification Detail</button>
+    <button class="nav-btn" onclick="goTo('faq')">42. FAQ</button>
+  </div>
+</div>
+
+<div id="phone-wrap">
+  <div class="phone">
+    <div class="phone-inner" id="app">
+      <!-- Screens rendered by React -->
+    </div>
+  </div>
+</div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ─── Global State ────────────────────────────────────────────────────────────
+const SCREENS = [
+  'splash1','splash2','lang-select','onboarding1','onboarding2',
+  'registration-default','registration-filled','otp-default','otp-filled',
+  'set-pin-default','set-pin-typing','enter-pin','pin-wrong',
+  'home-v1','home-v2','home-services','wallet-details',
+  'card-front','card-flipped','card-scroll',
+  'add-balance-default','add-balance-filled','adding-amount',
+  'transfer','transfer-to','transfer-filled','success',
+  'crypto-start','crypto','swap',
+  'payments','search-bill','pay-service','cashback',
+  'profile','edit-profile','settings','app-language','appearance',
+  'notifications','notif-detail','faq'
+];
+
+let _screen = 'splash1';
+let _listeners = [];
+const store = {
+  get: () => _screen,
+  set: (s) => { _screen = s; _listeners.forEach(fn => fn(s)); updateSidebar(s); },
+  subscribe: (fn) => { _listeners.push(fn); return () => { _listeners = _listeners.filter(f => f !== fn); }; }
+};
+
+function updateSidebar(s) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const idx = SCREENS.indexOf(s);
+  if (idx >= 0) {
+    document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+    document.getElementById('screen-counter').textContent = `Screen ${idx+1} / ${SCREENS.length}`;
+  }
+}
+
+window.goTo = (s) => store.set(s);
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+function useScreen() {
+  const [s, setS] = useState(_screen);
+  useEffect(() => store.subscribe(setS), []);
+  return [s, store.set];
+}
+
+// ─── Reusable Components ──────────────────────────────────────────────────────
+function StatusBar({ light }) {
+  const c = light ? '#fff' : '#111';
+  return (
+    <div className="status-bar" style={{ color: c }}>
+      <span className="status-time">9:41</span>
+      <div className="status-icons">
+        <span>●●●</span><span>WiFi</span><span>🔋</span>
+      </div>
+    </div>
+  );
+}
+
+function BackBtn({ to, light, onClick }) {
+  const [, nav] = useScreen();
+  return (
+    <button className="back-btn" style={light ? { background: 'rgba(255,255,255,0.2)', color: '#fff' } : {}}
+      onClick={() => { if (onClick) onClick(); else nav(to); }}>
+      ←
+    </button>
+  );
+}
+
+function BottomTab({ active }) {
+  const [, nav] = useScreen();
+  const tabs = [
+    { id: 'home-v1', icon: '🏠', label: 'Home' },
+    { id: 'crypto-start', icon: '🪙', label: 'Crypto' },
+    { id: 'card-front', icon: '💳', label: 'Card' },
+    { id: 'cashback', icon: '🎁', label: 'Cashback' },
+    { id: 'profile', icon: '···', label: 'More' },
+  ];
+  return (
+    <div className="bottom-tab">
+      {tabs.map(t => (
+        <div key={t.id} className={`tab-item ${active === t.id ? 'active' : ''}`} onClick={() => nav(t.id)}>
+          <span className="tab-icon">{t.icon}</span>
+          <span className="tab-label">{t.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Keypad({ onKey, onDel, light }) {
+  const rows = [['1','','2','ABC','3','DEF'],['4','GHI','5','JKL','6','MNO'],['7','PQRS','8','TUV','9','WXYZ']];
+  return (
+    <div className="keypad" style={light ? { background: '#fafafa' } : {}}>
+      {rows.map((row, ri) => (
+        <React.Fragment key={ri}>
+          {[0,2,4].map(i => (
+            <button key={i} className="key" onClick={() => onKey(row[i])}>
+              <span>{row[i]}</span>
+              {row[i+1] && <span className="key-sub">{row[i+1]}</span>}
+            </button>
+          ))}
+        </React.Fragment>
+      ))}
+      <div />
+      <button className="key" onClick={() => onKey('0')}><span>0</span></button>
+      <button className="key key-del" onClick={onDel}>⌫</button>
+    </div>
+  );
+}
+
+// ─── 1. Splash Screen v1 ──────────────────────────────────────────────────────
+function SplashV1() {
+  const [, nav] = useScreen();
+  return (
+    <div className="screen active" style={{ background: '#a8e063', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }} onClick={() => nav('onboarding1')}>
+      <StatusBar />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'center' }}>
+        <div style={{ width: 80, height: 80, background: '#111', borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>✳️</div>
+        <h1 style={{ fontSize: 36, fontWeight: 900, color: '#111', letterSpacing: -1 }}>FinPay</h1>
+        <p style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>Your Digital Wallet</p>
+      </div>
+      <p style={{ fontSize: 11, color: '#555', paddingBottom: 40, animation: 'pulse 1.5s infinite' }}>Tap anywhere to continue</p>
+      <span className="screen-label">Splash Screen v1</span>
+    </div>
+  );
+}
+
+// ─── 2. Splash Screen v2 ──────────────────────────────────────────────────────
+function SplashV2() {
+  const [, nav] = useScreen();
+  return (
+    <div className="screen active" style={{ background: '#111', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }} onClick={() => nav('lang-select')}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flex: 1, justifyContent: 'center' }}>
+        <div style={{ width: 100, height: 100, background: '#a8e063', borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, animation: 'bounce 2s ease infinite' }}>💳</div>
+        <h1 style={{ fontSize: 40, fontWeight: 900, color: '#fff', letterSpacing: -1 }}>VNKR</h1>
+        <p style={{ fontSize: 13, color: '#888', fontWeight: 500 }}>Fintech &amp; Web3 Hub</p>
+        <div style={{ display: 'flex', gap: 6, marginTop: 20 }}>
+          {[1,2,3].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: i===1?'#a8e063':'#333', animation: `pulse ${i*0.4+0.6}s infinite` }} />)}
+        </div>
+      </div>
+      <p style={{ fontSize: 11, color: '#444', paddingBottom: 40 }}>Tap to continue</p>
+      <span className="screen-label">Splash Screen v2</span>
+    </div>
+  );
+}
+
+// ─── 3. App Language Select (initial) ────────────────────────────────────────
+function LangSelectInitial() {
+  const [, nav] = useScreen();
+  const [sel, setSel] = useState('English');
+  const langs = [['🇺🇸','English'],['🇫🇷','French'],['🇪🇸','Spanish'],['🇨🇳','Chinese'],['🇯🇵','Japanese'],['🇦🇿','Azerbaijani'],['🇷🇺','Russian'],['🇻🇳','Vietnamese']];
+  return (
+    <div className="screen active" style={{ background: '#c5b3f5', flexDirection: 'column' }}>
+      <StatusBar />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px 16px' }}>
+        <button style={{ border: 'none', background: 'transparent', fontSize: 15, fontWeight: 600, cursor: 'pointer', color: '#111' }} onClick={() => nav('onboarding1')}>Skip</button>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 16 }}>
+        <div style={{ fontSize: 64 }}>💰</div>
+      </div>
+      <div style={{ background: '#fff', borderRadius: '24px 24px 0 0', flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px 20px 12px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700 }}>App language</h2>
+        </div>
+        <div className="scroll">
+          {langs.map(([flag, name]) => (
+            <button key={name} className="lang-item" onClick={() => setSel(name)}>
+              <span className="lang-flag">{flag}</span>
+              <span className="lang-name">{name}</span>
+              <div className={`lang-radio ${sel === name ? 'selected' : ''}`} />
+            </button>
+          ))}
+        </div>
+        <div style={{ padding: '12px 20px 20px' }}>
+          <button className="btn btn-black" onClick={() => nav('onboarding1')}>Continue</button>
+        </div>
+      </div>
+      <span className="screen-label">App Language (select)</span>
+    </div>
+  );
+}
+
+// ─── 4. Onboarding v1 ─────────────────────────────────────────────────────────
+function OnboardingV1() {
+  const [, nav] = useScreen();
+  return (
+    <div className="screen active" style={{ background: '#fff', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', gap: 16 }}>
+        <div style={{ width: 200, height: 200, background: '#f5f5f5', borderRadius: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>🌐</div>
+        <h2 style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', lineHeight: 1.25 }}>Manage your money everywhere</h2>
+        <p style={{ fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.6 }}>Send, receive and exchange money across borders with zero fees.</p>
+        <div className="ob-dots">
+          <div className="ob-dot active" />
+          <div className="ob-dot" />
+          <div className="ob-dot" />
+        </div>
+      </div>
+      <div style={{ padding: '0 20px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button className="btn btn-black" onClick={() => nav('registration-default')}>Create account</button>
+        <button className="btn btn-outline" onClick={() => nav('enter-pin')}>Sign in</button>
+      </div>
+      <span className="screen-label">Onboarding v1</span>
+    </div>
+  );
+}
+
+// ─── 5. Onboarding v2 ─────────────────────────────────────────────────────────
+function OnboardingV2() {
+  const [, nav] = useScreen();
+  return (
+    <div className="screen active" style={{ background: '#fff', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', gap: 16 }}>
+        <div style={{ width: 200, height: 200, background: '#f0fff0', borderRadius: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>💎</div>
+        <h2 style={{ fontSize: 26, fontWeight: 800, textAlign: 'center', lineHeight: 1.25 }}>Earn rewards on every purchase</h2>
+        <p style={{ fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 1.6 }}>Get cashback, bonuses and exclusive crypto rewards automatically.</p>
+        <div className="ob-dots">
+          <div className="ob-dot" />
+          <div className="ob-dot active" />
+          <div className="ob-dot" />
+        </div>
+      </div>
+      <div style={{ padding: '0 20px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button className="btn btn-black" onClick={() => nav('registration-default')}>Get started</button>
+        <button className="btn btn-outline" onClick={() => nav('enter-pin')}>I already have account</button>
+      </div>
+      <span className="screen-label">Onboarding v2</span>
+    </div>
+  );
+}
+
+// ─── 6 & 7. Registration ──────────────────────────────────────────────────────
+function Registration({ filled }) {
+  const [, nav] = useScreen();
+  const [phone, setPhone] = useState(filled ? '2025550105' : '');
+  const isFilled = phone.length >= 7;
+  return (
+    <div className="screen active" style={{ background: filled ? '#f5e842' : '#f5e842', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div className="screen-header">
+        <BackBtn to="onboarding1" />
+        <h2>Registration</h2>
+      </div>
+      <div style={{ flex: 1, background: '#fff', borderRadius: '24px 24px 0 0', padding: '28px 20px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f5f5f5', borderRadius: 30, padding: '8px 16px', cursor: 'pointer' }}>
+            <span style={{ fontSize: 22 }}>🇺🇸</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>+1</span>
+            <span style={{ fontSize: 12, color: '#999' }}>▼</span>
+          </div>
+        </div>
+        {isFilled && (
+          <div style={{ textAlign: 'center', fontSize: 28, fontWeight: 700, color: '#111' }}>
+            +1 {phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')}
+          </div>
+        )}
+        {!isFilled && (
+          <div style={{ textAlign: 'center', fontSize: 28, fontWeight: 700, color: '#ccc' }}>
+            Phone number
+          </div>
+        )}
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#999' }}>Phone number</p>
+      </div>
+      <div style={{ background: '#fff', paddingBottom: 0 }}>
+        <div style={{ padding: '12px 20px' }}>
+          <button className={`btn ${isFilled ? 'btn-black' : 'btn-disabled'}`} disabled={!isFilled} onClick={() => nav('otp-default')}>Continue</button>
+        </div>
+        <Keypad onKey={(d) => setPhone(p => p.length < 10 ? p + d : p)} onDel={() => setPhone(p => p.slice(0, -1))} light />
+      </div>
+      <span className="screen-label">{filled ? 'Registration (filled)' : 'Registration (default)'}</span>
+    </div>
+  );
+}
+
+// ─── 8 & 9. Confirm OTP ───────────────────────────────────────────────────────
+function ConfirmOTP({ filled }) {
+  const [, nav] = useScreen();
+  const [otp, setOtp] = useState(filled ? '12' : '');
+  return (
+    <div className="screen active" style={{ background: '#f5e842', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div className="screen-header">
+        <BackBtn to="registration-default" />
+        <h2>Confirm OTP</h2>
+      </div>
+      <div style={{ flex: 1, background: '#fff', borderRadius: '24px 24px 0 0', padding: '28px 20px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <p style={{ textAlign: 'center', fontSize: 14, color: '#666' }}>We sent 4-digit code to <b>+1 202 555 0105</b></p>
+        <div className="otp-boxes">
+          {[0,1,2,3].map(i => (
+            <div key={i} className={`otp-box ${i < otp.length ? 'filled' : ''}`}>
+              {i < otp.length ? '●' : ''}
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: 'center', fontSize: 13, color: '#888' }}>
+          Didn't get code? <span style={{ color: '#3b82f6', fontWeight: 600 }}>1:45 Resend</span>
+        </div>
+        <div style={{ padding: '0 0 8px' }}>
+          <button className={`btn ${otp.length >= 4 ? 'btn-black' : 'btn-disabled'}`} disabled={otp.length < 4} onClick={() => nav('set-pin-default')}>Confirm</button>
+        </div>
+      </div>
+      {filled && <div style={{ background: '#f8f8f8', borderTop: '1px solid #e8e8e8', padding: '8px 20px', textAlign: 'center', fontSize: 12, color: '#888' }}>From Messages: <b>1234</b></div>}
+      <Keypad onKey={(d) => setOtp(p => p.length < 4 ? p + d : p)} onDel={() => setOtp(p => p.slice(0, -1))} light />
+      <span className="screen-label">{filled ? 'Confirm OTP (filled)' : 'Confirm OTP (default)'}</span>
+    </div>
+  );
+}
+
+// ─── 10, 11. Set PIN ──────────────────────────────────────────────────────────
+function SetPIN({ typing }) {
+  const [, nav] = useScreen();
+  const [pin, setPin] = useState(typing ? '12' : '');
+  const [lastKey, setLastKey] = useState(null);
+  function handleKey(d) {
+    setLastKey(d);
+    setPin(p => p.length < 4 ? p + d : p);
+    setTimeout(() => setLastKey(null), 200);
+  }
+  return (
+    <div className="screen active" style={{ background: '#c5b3f5', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div className="screen-header">
+        <BackBtn to="otp-filled" />
+        <h2>Set PIN Code</h2>
+      </div>
+      <div style={{ flex: 1, background: '#fff', borderRadius: '24px 24px 0 0', padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="pin-dots">
+          {[0,1,2,3].map(i => (
+            <div key={i} className={`pin-dot ${i < pin.length ? 'filled' : ''}`} />
+          ))}
+        </div>
+        {typing && pin.length > 0 && (
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: lastKey ? '#111' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: '#fff', transition: 'background 0.1s', marginTop: 12 }}>
+            {lastKey || ''}
+          </div>
+        )}
+      </div>
+      <div style={{ background: '#fff' }}>
+        <Keypad onKey={handleKey} onDel={() => setPin(p => p.slice(0, -1))} light />
+        <div style={{ height: 16 }} />
+      </div>
+      <span className="screen-label">{typing ? 'Setting PIN code' : 'Set PIN (default)'}</span>
+    </div>
+  );
+}
+
+// ─── 12. Enter PIN ─────────────────────────────────────────────────────────────
+function EnterPIN() {
+  const [, nav] = useScreen();
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState(false);
+
+  function handleKey(d) {
+    if (pin.length < 4) {
+      const np = pin + d;
+      setPin(np);
+      if (np.length === 4) {
+        setTimeout(() => {
+          if (np === '1234') { setPin(''); nav('home-v1'); }
+          else { setError(true); setPin(''); setTimeout(() => { setError(false); nav('pin-wrong'); }, 600); }
+        }, 300);
+      }
+    }
+  }
+
+  return (
+    <div className="screen active" style={{ background: '#c5b3f5', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div style={{ padding: '8px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <button style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer' }}>👤</button>
+      </div>
+      <div style={{ flex: 1, background: '#fff', borderRadius: '24px 24px 0 0', padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h2 style={{ marginBottom: 8 }}>Enter PIN Code</h2>
+        <p style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>Demo PIN: 1234</p>
+        <div className={`pin-dots ${error ? 'shake' : ''}`} style={error ? { animation: 'shake 0.4s' } : {}}>
+          {[0,1,2,3].map(i => (
+            <div key={i} className={`pin-dot ${i < pin.length ? 'filled' : ''} ${error ? 'error' : ''}`} />
+          ))}
+        </div>
+        {error && <p className="error-text">PIN code is wrong</p>}
+      </div>
+      <div style={{ background: '#fff' }}>
+        <Keypad onKey={handleKey} onDel={() => setPin(p => p.slice(0, -1))} light />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 20px 16px' }}>
+          <button style={{ border: 'none', background: 'transparent', fontSize: 13, color: '#3b82f6', fontWeight: 600, cursor: 'pointer' }} onClick={() => nav('otp-default')}>Forgot password?</button>
+        </div>
+      </div>
+      <span className="screen-label">Enter PIN</span>
+    </div>
+  );
+}
+
+// ─── 13. PIN is wrong ──────────────────────────────────────────────────────────
+function PINWrong() {
+  const [, nav] = useScreen();
+  const [pin, setPin] = useState('');
+  return (
+    <div className="screen active" style={{ background: '#c5b3f5', justifyContent: 'space-between' }}>
+      <StatusBar />
+      <div style={{ padding: '8px 20px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <button style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer' }}>👤</button>
+      </div>
+      <div style={{ flex: 1, background: '#fff', borderRadius: '24px 24px 0 0', padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h2 style={{ marginBottom: 16 }}>Enter PIN Code</h2>
+        <div className="pin-dots" style={{ animation: 'shake 0.4s' }}>
+          {[0,1,2,3].map(i => (
+            <div key={i} className="pin-dot error" />
+          ))}
+        </div>
+        <p className="error-text" style={{ marginTop: 8 }}>PIN code is wrong</p>
+        <div style={{ marginTop: 20, display: 'flex', gap: 16 }}>
+          <button style={{ border: 'none', background: 'transparent', fontSize: 28, cursor: 'pointer' }} title="Face ID">🔍</button>
+        </div>
+      </div>
+      <div style={{ background: '#fff' }}>
+        <Keypad onKey={(d) => setPin(p => p.length < 4 ? p+d : p)} onDel={() => setPin(p => p.slice(0,-1))} light />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 20px 16px' }}>
+          <button style={{ border: 'none', background: 'transparent', fontSize: 13, color: '#3b82f6', fontWeight: 600, cursor: 'pointer' }} onClick={() => nav('otp-default')}>Forgot password?</button>
+        </div>
+      </div>
+      <span className="screen-label">PIN is wrong</span>
+    </div>
+  );
+}
+</script>

@@ -1,0 +1,122 @@
+name: CI — SWIFT Adapter
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/swift-adapter/**'
+      - 'services/swift-gateway/**'
+      - 'services/mock-mgw/**'
+      - '.github/workflows/swift-adapter.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/swift-adapter/**'
+      - 'services/swift-gateway/**'
+
+concurrency:
+  group: swift-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Build & Test @vnkr/swift-adapter ──────────────────────────────────────
+  test:
+    name: Test @vnkr/swift-adapter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @vnkrvietnam/types
+        run: pnpm --filter @vnkrvietnam/types build
+
+      - name: Build @vnkrvietnam/config
+        run: pnpm --filter @vnkrvietnam/config build
+
+      - name: Build @vnkrvietnam/swift-adapter
+        run: pnpm --filter @vnkrvietnam/swift-adapter build
+
+      - name: Run unit tests
+        run: pnpm --filter @vnkrvietnam/swift-adapter test -- --reporter=verbose
+
+      - name: Run test coverage
+        run: pnpm --filter @vnkrvietnam/swift-adapter exec vitest run --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: swift-adapter-coverage
+          path: packages/swift-adapter/coverage/
+          retention-days: 7
+
+  # ─── Typecheck swift-gateway ────────────────────────────────────────────────
+  typecheck-gateway:
+    name: Typecheck swift-gateway
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vnkrvietnam/types build
+      - run: pnpm --filter @vnkrvietnam/config build
+      - run: pnpm --filter @vnkrvietnam/swift-adapter build
+      - name: Typecheck swift-gateway
+        run: pnpm --filter @vnkrvietnam/swift-gateway exec tsc --noEmit
+
+  # ─── Publish @vnkr/swift-adapter lên GitHub Package Registry ───────────────
+  publish:
+    name: Publish @vnkr/swift-adapter
+    runs-on: ubuntu-latest
+    needs: [test, typecheck-gateway]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@vnkrvietnam'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all dependencies
+        run: |
+          pnpm --filter @vnkrvietnam/types build
+          pnpm --filter @vnkrvietnam/config build
+
+      - name: Build @vnkrvietnam/swift-adapter
+        run: pnpm --filter @vnkrvietnam/swift-adapter build
+
+      - name: Publish to GitHub Package Registry
+        run: pnpm --filter @vnkrvietnam/swift-adapter publish --no-git-checks --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,29 @@
+{{/*
+───────────────────────────────────────────────────────────────────────────────
+  VNKR Services — Generic Service (ClusterIP) template
+  Creates a ClusterIP Service for each service that has a port.
+───────────────────────────────────────────────────────────────────────────────
+*/}}
+{{- range $key, $svc := .Values.services }}
+{{- if and $svc.enabled $svc.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "vnkr-services.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svc.name }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ $svc.name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+  ports:
+    - port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+      protocol: TCP
+      name: http
+{{- end }}
+{{- end }}

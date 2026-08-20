@@ -1,0 +1,351 @@
+{
+  "name": "vnkr-tech-holding-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VNKR TECH HOLDING JSC — Enterprise Monorepo (pnpm + Turborepo + Anchor/Solana/EVM)",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev:docker": "docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.dev.yml up -d",
+    "stop:docker": "docker compose -f deploy/docker/docker-compose.yml -f deploy/docker/docker-compose.dev.yml down",
+    "test:swift": "pnpm --filter @vnkrvietnam/swift-adapter test",
+    "test:ci": "turbo run test --filter=@vnkrvietnam/swift-adapter --filter=@vnkrvietnam/core-sdk --filter=@vnkrvietnam/merchant-sdk",
+    "publish:all": "node deploy/npm/scripts/publish-all.mjs",
+    "publish:dry": "node deploy/npm/scripts/publish-all.mjs --dry-run",
+    "version:patch": "node deploy/npm/scripts/bump-version.mjs patch",
+    "version:minor": "node deploy/npm/scripts/bump-version.mjs minor",
+    "version:major": "node deploy/npm/scripts/bump-version.mjs major",
+    "changeset": "changeset",
+    "changeset:add": "changeset add",
+    "changeset:version": "changeset version",
+    "changeset:publish": "pnpm build && pnpm test && changeset publish",
+    "changeset:status": "changeset status --verbose",
+    "changeset:tag": "changeset tag"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.1",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsup": "^8.3.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.3.1",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "chalk": "^5.3.0",
+    "execa": "^9.3.0",
+    "fast-xml-parser": "^4.4.1",
+    "globby": "^14.0.1",
+    "semver": "^7.6.3"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@sqds/sdk": "2.0.4"
+    }
+  },
+  "vnkr:workspace": {
+    "packages": {
+      "@vnkrvietnam/types": {
+        "path": "packages/types",
+        "version": "1.0.0",
+        "description": "Shared TypeScript types: Order State, KYC Status, Fiat Receipts, Subgraph Types",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        }
+      },
+      "@vnkrvietnam/config": {
+        "path": "packages/config",
+        "version": "1.0.0",
+        "description": "Environment constants, Program IDs, Seed PDAs, RPC Endpoints for VNKR ecosystem",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        }
+      },
+      "@vnkrvietnam/contracts": {
+        "path": "packages/contracts",
+        "version": "1.0.0",
+        "description": "Bophades Modular Smart Contracts — VNKR Reserve Currency, Governance, Treasury, VASP & Compliance (NQ-05/NĐ-284)",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "@openzeppelin/contracts": "^5.1.0",
+          "@vnkrvietnam/types": "workspace:*",
+          "@vnkrvietnam/config": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/core-sdk": {
+        "path": "packages/core-sdk",
+        "version": "1.0.0",
+        "description": "Solana/EVM Web3 Wrapper & Anchor IDL Integrator — shared across all VNKR apps",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "@coral-xyz/anchor": "^0.30.1",
+          "@solana/web3.js": "^1.95.0",
+          "viem": "^2.21.0"
+        }
+      },
+      "@vnkrvietnam/db": {
+        "path": "packages/db",
+        "version": "1.0.0",
+        "description": "Shared PostgreSQL connection pool + typed query helpers for VNKR services",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "pg": "^8.13.0"
+        }
+      },
+      "@vnkrvietnam/merchant-sdk": {
+        "path": "packages/merchant-sdk",
+        "version": "1.0.0",
+        "description": "JS/TS SDK for merchant partners integrating VNKR payment gateway (dev-api.vnkr.vn)",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "axios": "^1.7.0"
+        }
+      },
+      "@vnkrvietnam/sdk-swift": {
+        "path": "packages/sdk-swift",
+        "version": "1.0.0",
+        "description": "SWIFT Alliance Gateway SDK for @vnkrvietnam international financial system",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "axios": "^1.7.2",
+          "ethers": "^6.13.1",
+          "fast-xml-parser": "^4.4.0",
+          "zod": "^3.23.8"
+        }
+      },
+      "@vnkrvietnam/swift-adapter": {
+        "path": "packages/swift-adapter",
+        "version": "1.0.0",
+        "description": "SWIFT SDK wrapper — MT103/MT202 message builder, ISO 20022 parser, LAU signing for VNKR institutional banking",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "fast-xml-parser": "^4.4.1",
+          "ioredis": "^5.4.1"
+        }
+      },
+      "@vnkrvietnam/sdk-internal": {
+        "path": "packages/swift",
+        "version": "1.0.0",
+        "description": "SWIFT vendor SDK internal mirror — do not import directly; use @vnkrvietnam/swift-adapter",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "dependencies": {
+          "@vnkrvietnam/config": "workspace:*",
+          "@vnkrvietnam/types": "workspace:*",
+          "fast-xml-parser": "^4.4.1",
+          "ioredis": "^5.4.1"
+        }
+      },
+      "@vnkrvietnam/ui-kit": {
+        "path": "packages/ui-kit",
+        "version": "1.1.0",
+        "description": "VNKR exclusive design system component library",
+        "publishConfig": {
+          "access": "restricted",
+          "registry": "https://npm.pkg.github.com"
+        },
+        "peerDependencies": {
+          "react": ">=18.0.0",
+          "react-dom": ">=18.0.0"
+        }
+      }
+    },
+    "services": {
+      "@vnkrvietnam/api-gateway": {
+        "path": "services/api-gateway",
+        "port": 4000,
+        "description": "Central API Gateway — REST endpoints for all 17 service domains",
+        "dependencies": {
+          "express": "^4.19.0",
+          "cors": "^2.8.5",
+          "helmet": "^7.1.0",
+          "express-rate-limit": "^7.3.0",
+          "jsonwebtoken": "^9.0.2",
+          "bcryptjs": "^2.4.3",
+          "redis": "^4.6.14",
+          "bullmq": "^5.7.0",
+          "ws": "^8.17.0",
+          "uuid": "^10.0.0",
+          "@vnkrvietnam/types": "workspace:*",
+          "@vnkrvietnam/db": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/fiat-connector-api": {
+        "path": "services/fiat-connector-api",
+        "port": 4001,
+        "description": "[dev-api.vnkr.vn] Fiat Bank Matching Service & Webhook — VNKR FinTech Services JSC",
+        "dependencies": {
+          "fastify": "^4.28.0",
+          "axios": "^1.7.0",
+          "nodemailer": "^6.9.0",
+          "@vnkrvietnam/db": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/otc-liquidity-engine": {
+        "path": "services/otc-liquidity-engine",
+        "port": 4002,
+        "description": "[otc.vnkr.vn] Institutional OTC Liquidity Engine & VARA Compliance — VNKR Labs MENA/FZE",
+        "dependencies": {
+          "fastify": "^4.28.0",
+          "axios": "^1.7.0",
+          "viem": "^2.21.0",
+          "@solana/web3.js": "^1.95.0",
+          "@vnkrvietnam/db": "workspace:*",
+          "@vnkrvietnam/core-sdk": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/indexer-subgraph": {
+        "path": "services/indexer-subgraph",
+        "port": 4003,
+        "description": "[treasury-subgraph-api.vnkr.vn] Subgraph / Helius Indexer Service — VNKR Blockchain Network Ltd.",
+        "dependencies": {
+          "@graphprotocol/graph-ts": "^0.35.0",
+          "@graphprotocol/graph-cli": "^0.80.0",
+          "fastify": "^4.28.0",
+          "viem": "^2.21.0",
+          "@solana/web3.js": "^1.95.0",
+          "@vnkrvietnam/db": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/swift-gateway": {
+        "path": "services/swift-gateway",
+        "port": 4004,
+        "description": "[otc.vnkr.vn] SWIFT Messaging Gateway Service — interbank MT103/MT202/pacs.008 relay via SWIFT Microgateway 2.0.17",
+        "dependencies": {
+          "fastify": "^4.28.0",
+          "axios": "^1.7.0",
+          "ioredis": "^5.4.1",
+          "@vnkrvietnam/swift-adapter": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/swift-chain-bridge": {
+        "path": "services/swift-chain-bridge",
+        "port": 4005,
+        "description": "[otc.vnkr.vn] SWIFT ↔ Blockchain Bi-Directional Relayer — Oracle Engine kết nối swift-gateway với VNKR App-Chain EVM & Solana",
+        "dependencies": {
+          "fastify": "^4.28.0",
+          "axios": "^1.7.0",
+          "ethers": "^6.13.0",
+          "@solana/web3.js": "^1.95.0",
+          "@vnkrvietnam/swift-adapter": "workspace:*"
+        }
+      },
+      "@vnkrvietnam/mock-mgw-daemon": {
+        "path": "services/mock-mgw",
+        "port": 9003,
+        "description": "Mock SWIFT Microgateway Daemon cho môi trường dev/staging (thay thế swift-mgw-daemon)",
+        "dependencies": {
+          "fastify": "^4.28.0"
+        }
+      },
+      "@vnkrvietnam/dune-alert-bots": {
+        "path": "services/dune-alert-bots",
+        "description": "Telegram/Discord Alert Bots & Dune Analytics DApp data — VNKR Digital Twin & AI Labs",
+        "dependencies": {
+          "node-telegram-bot-api": "^0.66.0",
+          "@discordjs/rest": "^2.3.0",
+          "discord-api-types": "^0.37.0",
+          "axios": "^1.7.0"
+        }
+      }
+    },
+    "apps": {
+      "@vnkrvietnam/id-fiat-gateway": {
+        "path": "apps/id-fiat-gateway",
+        "port": 3001,
+        "url": "id.vnkr.vn"
+      },
+      "@vnkrvietnam/pay-portal": {
+        "path": "apps/pay-portal",
+        "port": 3002,
+        "url": "pay.vnkr.vn"
+      },
+      "@vnkrvietnam/explorer-vnkrscan": {
+        "path": "apps/explorer-vnkrscan",
+        "port": 3003,
+        "url": "scan.vnkr.vn"
+      },
+      "@vnkrvietnam/swap-dex": {
+        "path": "apps/swap-dex",
+        "port": 3004,
+        "url": "swap.vnkr.vn"
+      },
+      "@vnkrvietnam/dao-portal": {
+        "path": "apps/dao-portal",
+        "port": 3005,
+        "url": "dao.vnkr.vn"
+      },
+      "@vnkrvietnam/holding-admin-portal": {
+        "path": "apps/holding-admin-portal",
+        "port": 3006,
+        "url": "holding.vnkr.vn"
+      },
+      "@vnkrvietnam/app-web": {
+        "path": "apps/app-web",
+        "port": 3010,
+        "url": "app.vnkr.vn"
+      },
+      "@vnkrvietnam/merchant-portal": {
+        "path": "apps/merchant-portal",
+        "port": 3011,
+        "url": "merchant.vnkr.vn"
+      },
+      "@vnkrvietnam/sandbox-dashboard": {
+        "path": "apps/sandbox-dashboard",
+        "port": 3012,
+        "url": "sandbox.vnkr.vn"
+      },
+      "@vnkrvietnam/kyc-portal": {
+        "path": "apps/kyc-portal",
+        "port": 3013,
+        "url": "kyc.vnkr.vn"
+      },
+      "@vnkrvietnam/digital-twin-engine": {
+        "path": "apps/digital-twin-engine",
+        "url": "lab.vnkr.vn"
+      }
+    }
+  }
+}

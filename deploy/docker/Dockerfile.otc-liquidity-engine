@@ -1,0 +1,24 @@
+# ─── Dockerfile: otc-liquidity-engine ────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY pnpm-workspace.yaml package.json turbo.json ./
+COPY packages/types    ./packages/types
+COPY packages/config   ./packages/config
+COPY packages/core-sdk ./packages/core-sdk
+COPY services/otc-liquidity-engine ./services/otc-liquidity-engine
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @vnkr/otc-liquidity-engine build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/services/otc-liquidity-engine/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 4002
+CMD ["node", "dist/index.js"]

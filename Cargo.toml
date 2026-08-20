@@ -1,0 +1,22 @@
+[workspace]
+members = [
+    "programs/VNKR-p2p-escrow",
+    "programs/VNKR-mint-governance",
+    "programs/VNKR-amm-swap",
+    "programs/VNKR-treasury-rbs",
+    "programs/VNKR-swift-bridge/solana",
+]
+resolver = "2"
+
+[workspace.dependencies]
+anchor-lang   = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-spl    = { version = "0.30.1" }
+solana-program = "~1.18"
+
+[profile.release]
+overflow-checks = true
+lto             = "thin"
+codegen-units   = 1
+
+[profile.dev]
+overflow-checks = true

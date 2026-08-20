@@ -1,0 +1,26 @@
+{
+  "name": "@vnkrvietnam/dune-alert-bots",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Telegram/Discord Alert Bots & Dune Analytics DApp data — VNKR Digital Twin & AI Labs",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "@discordjs/rest": "^2.3.0",
+    "discord-api-types": "^0.37.0",
+    "axios": "^1.7.0",
+    "@vnkrvietnam/types": "workspace:*",
+    "@vnkrvietnam/config": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/node-telegram-bot-api": "^0.64.0",
+    "ts-node": "^10.9.2"
+  }
+}

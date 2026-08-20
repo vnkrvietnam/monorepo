@@ -1,0 +1,33 @@
+# ─── Dockerfile: swift-chain-bridge ──────────────────────────────────────────
+# Bi-Directional SWIFT ↔ Blockchain Relayer (Port 4005)
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY pnpm-workspace.yaml package.json turbo.json ./
+
+# Shared packages
+COPY packages/types         ./packages/types
+COPY packages/config        ./packages/config
+COPY packages/swift-adapter ./packages/swift-adapter
+
+# Service
+COPY services/swift-chain-bridge ./services/swift-chain-bridge
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @vnkr/types          build
+RUN pnpm --filter @vnkr/config         build
+RUN pnpm --filter @vnkr/swift-adapter  build
+RUN pnpm --filter @vnkr/swift-chain-bridge build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/services/swift-chain-bridge/dist  ./dist
+COPY --from=builder /app/node_modules                       ./node_modules
+COPY --from=builder /app/services/swift-chain-bridge/package.json ./package.json
+
+EXPOSE 4005
+CMD ["node", "dist/index.js"]

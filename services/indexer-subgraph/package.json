@@ -1,0 +1,30 @@
+{
+  "name": "@vnkrvietnam/indexer-subgraph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "[treasury-subgraph-api.vnkr.vn] Subgraph / Helius Indexer Service — VNKR Blockchain Network Ltd.",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "graph:codegen": "graph codegen",
+    "graph:build": "graph build",
+    "graph:deploy": "graph deploy"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-ts": "^0.35.0",
+    "@graphprotocol/graph-cli": "^0.80.0",
+    "fastify": "^4.28.0",
+    "viem": "^2.21.0",
+    "@solana/web3.js": "^1.95.0",
+    "@vnkrvietnam/db": "workspace:*",
+    "@vnkrvietnam/types": "workspace:*",
+    "@vnkrvietnam/config": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2"
+  }
+}

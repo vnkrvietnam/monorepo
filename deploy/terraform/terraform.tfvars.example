@@ -1,0 +1,13 @@
+# ─── terraform.tfvars.example ─────────────────────────────────────────────────
+# Copy to terraform.tfvars and fill in real values.
+# Never commit terraform.tfvars — it is listed in .gitignore.
+
+aws_region            = "ap-southeast-1"
+
+# From .env.example / Cloudflare Dashboard
+cloudflare_api_token  = "cfat_GNFNVsp44adAv84SEkjxYzRtH0yhuE1sVLvU1zXp12fc9029"
+cloudflare_account_id = "b1c94362bb5f0f5c8809aa24c93fad35"
+cloudflare_zone_id    = "b1c94362bb5f0f5c8809aa24c93fad35"
+
+lb_origin             = "lb.vnkr.vn"
+environment           = "prod"

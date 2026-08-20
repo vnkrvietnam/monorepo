@@ -1,0 +1,54 @@
+name: NPM Publish — @vnkr/* packages
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (no actual upload)"
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    name: Publish @vnkr/* to npmjs.com
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # Required for NPM provenance attestation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js with npm registry auth
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Publish packages (dry run)
+        if: ${{ inputs.dry_run == true }}
+        run: pnpm --filter @vnkr/deploy-npm publish:dry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish packages (live)
+        if: ${{ inputs.dry_run != true }}
+        run: pnpm --filter @vnkr/deploy-npm publish:all
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
